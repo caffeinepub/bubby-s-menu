@@ -16,8 +16,10 @@ export default {
     },
     extend: {
       fontFamily: {
+        display: ["Playfair Display", "Georgia", "serif"],
+        body: ["Lato", "system-ui", "sans-serif"],
         serif: ["Playfair Display", "Georgia", "serif"],
-        sans: ["DM Sans", "system-ui", "sans-serif"],
+        sans: ["Lato", "system-ui", "sans-serif"],
       },
       colors: {
         border: "oklch(var(--border))",
@@ -53,14 +55,6 @@ export default {
           DEFAULT: "oklch(var(--card))",
           foreground: "oklch(var(--card-foreground))",
         },
-        maroon: {
-          DEFAULT: "oklch(var(--maroon) / <alpha-value>)",
-          deep: "oklch(var(--maroon-deep) / <alpha-value>)",
-        },
-        parchment: {
-          DEFAULT: "oklch(var(--parchment))",
-          light: "oklch(var(--parchment-light))",
-        },
         chart: {
           1: "oklch(var(--chart-1))",
           2: "oklch(var(--chart-2))",
@@ -85,8 +79,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       boxShadow: {
-        xs: "0 1px 2px 0 rgba(0,0,0,0.05)",
-        parchment: "0 2px 12px 0 rgba(90,26,22,0.10), 0 1px 3px 0 rgba(90,26,22,0.06)",
+        card: "0 2px 16px 0 rgba(44,26,14,0.10), 0 1px 4px 0 rgba(44,26,14,0.06)",
+        nav: "0 2px 12px 0 rgba(44,26,14,0.10)",
       },
       keyframes: {
         "accordion-down": {
@@ -98,14 +92,19 @@ export default {
           to: { height: "0" },
         },
         "fade-up": {
-          from: { opacity: "0", transform: "translateY(20px)" },
+          from: { opacity: "0", transform: "translateY(24px)" },
           to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-up": "fade-up 0.5s ease-out forwards",
+        "fade-up": "fade-up 0.6s ease-out forwards",
+        "fade-in": "fade-in 0.5s ease-out forwards",
       },
     },
   },

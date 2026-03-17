@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Lato:wght@300;400;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,75 +6,108 @@
 
 @layer base {
   :root {
-    --radius: 0.5rem;
+    --radius: 0.625rem;
 
-    /* Parchment warm palette */
-    --background: 0.925 0.03 75; /* #F2E7D2 parchment */
-    --foreground: 0.15 0 0; /* #1A1A1A near-black */
-    --card: 0.96 0.018 78; /* slightly lighter parchment card */
-    --card-foreground: 0.15 0 0;
-    --popover: 0.96 0.018 78;
-    --popover-foreground: 0.15 0 0;
-    --primary: 0.37 0.12 25; /* #6E1F1B maroon */
-    --primary-foreground: 0.96 0.015 75;
-    --secondary: 0.88 0.025 75;
-    --secondary-foreground: 0.32 0.11 25;
-    --muted: 0.87 0.022 75;
-    --muted-foreground: 0.42 0.01 60;
-    --accent: 0.32 0.11 25; /* deep maroon accent */
-    --accent-foreground: 0.96 0.015 75;
-    --destructive: 0.577 0.245 27.325;
+    /* Warm cream / vintage restaurant palette — #FFF8F0 bg, #8B4513 brown, #C0392B red */
+    --background: 0.978 0.01 78; /* #FFF8F0 cream */
+    --foreground: 0.2 0.045 38; /* dark brown */
+    --card: 0.99 0.006 75; /* near-white warm card */
+    --card-foreground: 0.2 0.045 38;
+    --popover: 0.99 0.006 75;
+    --popover-foreground: 0.2 0.045 38;
+    --primary: 0.52 0.185 26; /* #C0392B accent red */
+    --primary-foreground: 0.99 0.005 75;
+    --secondary: 0.43 0.115 50; /* #8B4513 saddle brown */
+    --secondary-foreground: 0.97 0.01 78;
+    --muted: 0.93 0.018 72;
+    --muted-foreground: 0.52 0.045 42;
+    --accent: 0.43 0.115 50;
+    --accent-foreground: 0.97 0.01 78;
+    --destructive: 0.52 0.185 26;
     --destructive-foreground: 0.985 0 0;
-    --border: 0.37 0.12 25 / 30%; /* maroon border, lighter */
-    --input: 0.37 0.12 25 / 20%;
-    --ring: 0.37 0.12 25;
+    --border: 0.88 0.025 62;
+    --input: 0.88 0.025 62;
+    --ring: 0.52 0.185 26;
 
-    /* Extra tokens */
-    --maroon: 0.37 0.12 25;
-    --maroon-deep: 0.32 0.11 25;
-    --parchment: 0.925 0.03 75;
-    --parchment-light: 0.94 0.022 80;
-    --footer-bg: 0.25 0.03 230;
-    --footer-text: 0.91 0.015 80;
+    /* Brand tokens */
+    --brand-red: 0.52 0.185 26; /* #C0392B */
+    --brand-brown: 0.43 0.115 50; /* #8B4513 */
+    --brand-dark: 0.18 0.04 38;
+    --brand-cream: 0.978 0.01 78; /* #FFF8F0 */
+    --brand-gold: 0.8 0.14 80;
 
     --chart-1: 0.646 0.222 41.116;
     --chart-2: 0.6 0.118 184.704;
     --chart-3: 0.398 0.07 227.392;
     --chart-4: 0.828 0.189 84.429;
     --chart-5: 0.769 0.188 70.08;
-    --sidebar: 0.925 0.03 75;
-    --sidebar-foreground: 0.15 0 0;
-    --sidebar-primary: 0.37 0.12 25;
-    --sidebar-primary-foreground: 0.96 0.015 75;
-    --sidebar-accent: 0.88 0.025 75;
-    --sidebar-accent-foreground: 0.32 0.11 25;
-    --sidebar-border: 0.37 0.12 25 / 20%;
-    --sidebar-ring: 0.37 0.12 25;
+    --sidebar: 0.978 0.01 78;
+    --sidebar-foreground: 0.2 0.045 38;
+    --sidebar-primary: 0.52 0.185 26;
+    --sidebar-primary-foreground: 0.99 0.005 75;
+    --sidebar-accent: 0.93 0.018 72;
+    --sidebar-accent-foreground: 0.43 0.115 50;
+    --sidebar-border: 0.88 0.025 62;
+    --sidebar-ring: 0.52 0.185 26;
   }
 
   * {
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
-    font-family: "DM Sans", sans-serif;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    font-family: "Lato", sans-serif;
   }
 
   h1,
   h2,
   h3,
-  h4 {
+  h4,
+  h5 {
     font-family: "Playfair Display", Georgia, serif;
   }
 }
 
 @layer utilities {
-  .font-serif {
+  .font-display {
     font-family: "Playfair Display", Georgia, serif;
   }
-  .font-sans {
-    font-family: "DM Sans", sans-serif;
+  .font-body {
+    font-family: "Lato", sans-serif;
+  }
+  .text-brand-red {
+    color: oklch(var(--brand-red));
+  }
+  .text-brand-brown {
+    color: oklch(var(--brand-brown));
+  }
+  .text-brand-dark {
+    color: oklch(var(--brand-dark));
+  }
+  .bg-brand-red {
+    background-color: oklch(var(--brand-red));
+  }
+  .bg-brand-brown {
+    background-color: oklch(var(--brand-brown));
+  }
+  .bg-brand-cream {
+    background-color: oklch(var(--brand-cream));
+  }
+  .border-brand-red {
+    border-color: oklch(var(--brand-red));
+  }
+  .border-brand-brown {
+    border-color: oklch(var(--brand-brown));
+  }
+  .hover\:bg-brand-red-dark:hover {
+    background-color: oklch(0.44 0.175 26);
+  }
+  .hover\:bg-brand-brown-dark:hover {
+    background-color: oklch(0.36 0.1 50);
   }
 }

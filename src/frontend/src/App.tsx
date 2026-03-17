@@ -1,1343 +1,1695 @@
 import {
-  AlertTriangle,
+  CheckCircle2,
   ChevronDown,
-  ChevronUp,
   Clock,
-  GlassWater,
+  Facebook,
+  Instagram,
   MapPin,
+  Menu,
+  Minus,
   Phone,
-  Wine,
+  Plus,
+  ShoppingBag,
+  Star,
+  Trash2,
+  Twitter,
+  X,
 } from "lucide-react";
-import { AnimatePresence, motion, useScroll, useTransform } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+type MenuCategory = "pancakes" | "breakfast" | "lunch" | "drinks";
+
 interface MenuItem {
   name: string;
-  price: string;
-  note?: string;
+  description: string;
+  price: number;
+  image: string;
 }
 
-interface MenuCategory {
-  category: string;
-  items: MenuItem[];
-  note?: string;
-}
-
-// ─── Menu Data ───────────────────────────────────────────────────────────────
-const drinksData: MenuCategory[] = [
-  {
-    category: "Water",
-    items: [
-      { name: "Acqua Panna (1L)", price: "$10" },
-      { name: "Pellegrino (1L)", price: "$10" },
-    ],
-  },
-  {
-    category: "Coffee & Tea",
-    items: [
-      {
-        name: "Drip Coffee",
-        price: "$5",
-        note: "Unlimited refills in-house · Regular: Perla de Inzá (Colombia) · Decaf: Midnight Cowboy (Colombia)",
-      },
-      { name: "Cold Brew", price: "$6", note: "No refills" },
-      {
-        name: "Harney & Sons Tea",
-        price: "$5",
-        note: "English Breakfast, Earl Grey, Mint, Chamomile, Green",
-      },
-      { name: "Hot Chocolate", price: "$10", note: "Valrhona + marshmallow" },
-      { name: "Hot Cider", price: "$8" },
-      { name: "Iced Tea", price: "$5" },
-      { name: "Arnold Palmer", price: "$6" },
-      { name: "Hibiscus Iced Tea", price: "$5" },
-      { name: "Hibiscus Palmer", price: "$6" },
-    ],
-  },
-  {
-    category: "Juice, Lemonade & Soda",
-    items: [
-      { name: "Fresh Orange Juice", price: "$8" },
-      { name: "Green Juice", price: "$9" },
-      { name: "Pink Lemonade", price: "$6" },
-      { name: "Peach Lemonade", price: "$7" },
-      { name: "Homemade Sodas", price: "$6" },
-      { name: "Shirley Temple", price: "$7" },
-      { name: "Root Beer Float", price: "$10" },
-      { name: "Coke Float", price: "$10" },
-      { name: "Coke / Diet Coke", price: "$4" },
-    ],
-  },
-  {
-    category: "Beer",
-    items: [
-      { name: "Pilsner, Blue Moon, IPA", price: "$9" },
-      { name: "Torch & Crown Après Ale", price: "$9" },
-      { name: "Miller High Life", price: "$7" },
-      { name: "Aval Hard Cider", price: "$7" },
-      { name: "Guinness", price: "$10" },
-      { name: "Athletic Brewing (non-alcoholic)", price: "$7" },
-      { name: "Michelada", price: "$12" },
-    ],
-  },
-  {
-    category: "Cocktails",
-    items: [
-      { name: "Bourbon Hot Cider", price: "$16" },
-      {
-        name: "Mimosa",
-        price: "$14",
-        note: "Multiple flavors + flight available",
-      },
-      { name: "Bloody Mary", price: "$15" },
-      { name: "Margarita", price: "$17", note: "Pomegranate" },
-      { name: "Paloma Picante", price: "$17" },
-      { name: "Old Fashioned", price: "$17", note: "Rum blend" },
-      { name: "Bubby's Punch", price: "$17" },
-      { name: "Bubby's Spritz", price: "$15" },
-      { name: "Hugo Spritz", price: "$15" },
-      { name: "Passionfruit Mojito", price: "$17" },
-      { name: "Bourbon Sweet Tea", price: "$17" },
-      { name: "Cold Brewtini", price: "$17" },
-      { name: "Rye Manhattan", price: "$17" },
-      { name: "Kyiv Mule", price: "$17" },
-      { name: "High Noon Pear", price: "$8" },
-      { name: "Non-alcoholic Negroni", price: "$12" },
-    ],
-  },
-];
-
-const winesData = {
-  sparklingRose: [
-    { name: "Prosecco", glass: "$12", bottle: "$45" },
-    { name: "Crémant", glass: "$15", bottle: "$60" },
-    { name: "Rosé", glass: "$12", bottle: "$45" },
+const MENU_ITEMS: Record<MenuCategory, MenuItem[]> = {
+  pancakes: [
+    {
+      name: "Classic Pancakes",
+      description:
+        "Fluffy buttermilk pancakes served with real maple syrup and fresh butter",
+      price: 14,
+      image: "/assets/generated/pancakes-classic.dim_600x400.jpg",
+    },
+    {
+      name: "Blueberry Pancakes",
+      description: "Loaded with fresh blueberries and lemon zest whipped cream",
+      price: 16,
+      image: "/assets/generated/pancakes-blueberry.dim_600x400.jpg",
+    },
+    {
+      name: "Banana Walnut Pancakes",
+      description: "Caramelized bananas, toasted walnuts, cinnamon butter",
+      price: 15,
+      image: "/assets/generated/pancakes-classic.dim_600x400.jpg",
+    },
+    {
+      name: "Short Stack",
+      description: "Two golden pancakes — simple, classic, perfect",
+      price: 10,
+      image: "/assets/generated/pancakes-blueberry.dim_600x400.jpg",
+    },
   ],
-  white: [
-    { name: "Pinot Grigio", glass: "$12", bottle: "$45" },
-    { name: "Sauvignon Blanc", glass: "$14", bottle: "$50" },
-    { name: "Petit Chablis", glass: null, bottle: "$65" },
+  breakfast: [
+    {
+      name: "Eggs Benedict",
+      description:
+        "Poached eggs, Canadian bacon, hollandaise on an English muffin",
+      price: 18,
+      image: "/assets/generated/eggs-benedict.dim_600x400.jpg",
+    },
+    {
+      name: "Full Breakfast Plate",
+      description: "Two eggs any style, crispy bacon, home fries, and toast",
+      price: 16,
+      image: "/assets/generated/breakfast-plate.dim_600x400.jpg",
+    },
+    {
+      name: "Avocado Toast",
+      description:
+        "Smashed avocado, cherry tomatoes, everything bagel seasoning",
+      price: 14,
+      image: "/assets/generated/eggs-benedict.dim_600x400.jpg",
+    },
+    {
+      name: "Granola Bowl",
+      description: "House granola, Greek yogurt, seasonal fruit, local honey",
+      price: 12,
+      image: "/assets/generated/breakfast-plate.dim_600x400.jpg",
+    },
   ],
-  red: [
-    { name: "Tempranillo", glass: "$12", bottle: "$45" },
-    { name: "Côtes du Rhône", glass: "$14", bottle: "$50" },
-    { name: "Bordeaux", glass: null, bottle: "$50" },
+  lunch: [
+    {
+      name: "Classic Burger",
+      description: "8oz beef patty, aged cheddar, caramelized onions, pickles",
+      price: 18,
+      image: "/assets/generated/burger-classic.dim_600x400.jpg",
+    },
+    {
+      name: "Club Sandwich",
+      description: "Triple-decker turkey, bacon, lettuce, tomato, house mayo",
+      price: 17,
+      image: "/assets/generated/club-sandwich.dim_600x400.jpg",
+    },
+    {
+      name: "BLT",
+      description:
+        "Thick-cut bacon, heirloom tomato, butter lettuce, sourdough",
+      price: 15,
+      image: "/assets/generated/burger-classic.dim_600x400.jpg",
+    },
+    {
+      name: "Grilled Cheese",
+      description: "Three-cheese blend on pullman bread with tomato soup",
+      price: 13,
+      image: "/assets/generated/club-sandwich.dim_600x400.jpg",
+    },
+  ],
+  drinks: [
+    {
+      name: "Fresh Lemonade",
+      description:
+        "Hand-squeezed lemonade with a hint of lavender, served ice cold",
+      price: 6,
+      image: "/assets/generated/lemonade-fresh.dim_600x400.jpg",
+    },
+    {
+      name: "Hot Chocolate",
+      description: "Rich, velvety dark chocolate with fresh whipped cream",
+      price: 7,
+      image: "/assets/generated/hot-chocolate.dim_600x400.jpg",
+    },
+    {
+      name: "Iced Tea",
+      description: "House-brewed black tea with fresh lemon and mint",
+      price: 5,
+      image: "/assets/generated/lemonade-fresh.dim_600x400.jpg",
+    },
+    {
+      name: "Coffee",
+      description:
+        "House blend drip coffee, locally roasted, bottomless refills",
+      price: 4,
+      image: "/assets/generated/hot-chocolate.dim_600x400.jpg",
+    },
   ],
 };
 
-const brunchData: MenuCategory[] = [
+const ALL_ITEMS: MenuItem[] = Object.values(MENU_ITEMS).flat();
+
+const CATEGORY_LABELS: { key: MenuCategory; label: string }[] = [
+  { key: "pancakes", label: "Pancakes" },
+  { key: "breakfast", label: "Breakfast" },
+  { key: "lunch", label: "Lunch" },
+  { key: "drinks", label: "Drinks" },
+];
+
+const TESTIMONIALS = [
   {
-    category: "Pancakes",
-    note: "World famous!",
-    items: [
-      { name: "James Beard", price: "$24" },
-      { name: "1890 Sourdough", price: "$24" },
-      { name: "Gluten-Free", price: "$26" },
-      {
-        name: "Pancake Toppings",
-        price: "+$3",
-        note: "Blueberry, banana, Nutella & more",
-      },
-      { name: "Pancake Flight", price: "$27" },
-      { name: "Fried Chicken & Pancakes", price: "$29" },
-    ],
+    quote: "Best pancakes in NYC. This place is a true institution.",
+    name: "Sarah M.",
+    location: "Manhattan",
   },
   {
-    category: "Bread & Pastries",
-    items: [
-      { name: "Buttermilk Biscuits", price: "$8 / $16" },
-      { name: "Bagel + Cream Cheese", price: "$4" },
-      { name: "Rye / Sourdough Loaf", price: "$8" },
-    ],
+    quote:
+      "Amazing brunch experience. The eggs benedict are out of this world.",
+    name: "John D.",
+    location: "Brooklyn",
   },
   {
-    category: "Breakfast Plates",
-    items: [
-      { name: "Shrimp & Grits", price: "$26" },
-      { name: "Bubby's Breakfast", price: "$25" },
-      { name: "Griddle Special", price: "$24" },
-      { name: "Cheese Grits Breakfast", price: "$26" },
-      { name: "Biscuits + Hatch Chili Sausage", price: "$26" },
-      { name: "Huevos Rancheros", price: "$25" },
-      { name: "Eggs Benedict", price: "$27" },
-      { name: "Green Omelet", price: "$26" },
-      { name: "Market Omelet", price: "$26" },
-      { name: "Abe Lincoln Breakfast", price: "$28" },
-      { name: "Smoked Salmon Bagel Plate", price: "$24" },
-      { name: "Steel Cut Oatmeal", price: "$17" },
-      { name: "Granola", price: "$18" },
-      { name: "Fried Chicken", price: "$25" },
-    ],
-  },
-  {
-    category: "Sandwiches",
-    items: [
-      { name: "Avocado Toast", price: "$24" },
-      { name: "Turkey Pastrami Reuben", price: "$23" },
-      { name: "Turkey B.A.L.T.", price: "$22" },
-      { name: "Hot Chicken Sandwich", price: "$24" },
-      { name: "Tomato Soup + Grilled Cheese", price: "$22" },
-    ],
-  },
-  {
-    category: "Salads & Soup",
-    items: [
-      { name: "Grain Bowl", price: "$24", note: "+ protein add-ons" },
-      { name: "Caesar", price: "$21", note: "+ add-ons" },
-      { name: "Kale & Farro", price: "$22", note: "+ add-ons" },
-      { name: "Cobb Salad", price: "$24" },
-      { name: "Matzo Ball Soup", price: "$15" },
-      { name: "Veggie Chili", price: "$15" },
-      { name: "Tomato Soup + Grilled Cheese", price: "$22" },
-    ],
-  },
-  {
-    category: "Burgers",
-    note: "Add-ons: cheese +$2, extras +$3",
-    items: [
-      { name: "Bubby's Burger", price: "$24" },
-      { name: "Double Bubby 2.0", price: "$26" },
-      { name: "Chicken Burger", price: "$23" },
-      { name: "Veggie Burger", price: "$23" },
-    ],
-  },
-  {
-    category: "Sides & Add-ons",
-    items: [
-      { name: "Home Fries", price: "$7" },
-      { name: "Bacon", price: "$7" },
-      { name: "Sausage", price: "$7–9" },
-      { name: "Toast", price: "$4" },
-      { name: "Mac n Cheese", price: "$14" },
-      { name: "Deviled Eggs", price: "$13" },
-      { name: "Fries", price: "$7" },
-      { name: "Coleslaw", price: "$6" },
-      { name: "Spicy Broccoli", price: "$8" },
-    ],
+    quote: "Cozy atmosphere, incredible food. We come back every weekend.",
+    name: "Emily R.",
+    location: "Queens",
   },
 ];
 
-const dinnerData: MenuCategory[] = [
-  {
-    category: "Starters",
-    items: [
-      { name: "Mac n Cheese Balls", price: "$13" },
-      { name: "Nachos", price: "$15", note: "+ chicken add-on available" },
-      { name: "Chicken Wings", price: "$15" },
-      { name: "Deviled Eggs", price: "$13" },
-      { name: "Pigs in a Blanket", price: "$13" },
-    ],
-  },
-  {
-    category: "Biscuits",
-    items: [{ name: "Buttermilk Biscuits", price: "$8 / $16" }],
-  },
-  {
-    category: "Salads & Soups",
-    items: [
-      { name: "Grain Bowl", price: "$24", note: "+ protein add-ons" },
-      { name: "Caesar", price: "$21", note: "+ add-ons" },
-      { name: "Kale & Farro", price: "$22", note: "+ add-ons" },
-      { name: "Cobb Salad", price: "$24" },
-      { name: "Matzo Ball Soup", price: "$15" },
-      { name: "Veggie Chili", price: "$15" },
-    ],
-  },
-  {
-    category: "Mains",
-    items: [
-      { name: "Chicken Pot Pie", price: "$27" },
-      { name: "Chicken Shish Kebabs", price: "$24" },
-      { name: "NY Strip Steak", price: "$35" },
-      { name: "Seared Salmon", price: "$27" },
-      { name: "Meatloaf", price: "$24" },
-      { name: "Fried Chicken", price: "$26" },
-      { name: "Chicken & Pancakes", price: "$29" },
-      { name: "Hot Chicken Sandwich", price: "$24" },
-      { name: "Tomato Soup + Grilled Cheese", price: "$22" },
-    ],
-  },
-  {
-    category: "Burgers",
-    note: "Add-ons: cheese +$2, extras +$3",
-    items: [
-      { name: "Bubby's Burger", price: "$24" },
-      { name: "Double Bubby 2.0", price: "$26" },
-      { name: "Chicken Burger", price: "$23" },
-      { name: "Veggie Burger", price: "$23" },
-    ],
-  },
-  {
-    category: "Pancakes",
-    note: "Limited dinner selection",
-    items: [
-      { name: "James Beard", price: "$24", note: "+ toppings $3" },
-      { name: "Pancake Flight", price: "$27" },
-      { name: "Chicken & Pancakes", price: "$29" },
-    ],
-  },
-  {
-    category: "Sides",
-    items: [
-      { name: "Mac n Cheese", price: "$14" },
-      { name: "Broccoli", price: "$8" },
-      { name: "Asparagus", price: "$8" },
-      { name: "Brussels Sprouts", price: "$7–8" },
-      { name: "Baked Potato", price: "$9" },
-      { name: "Fries", price: "$7" },
-      { name: "Mashed Potatoes", price: "$7" },
-      { name: "Coleslaw", price: "$6" },
-    ],
-  },
-];
+const DELIVERY_FEE = 3;
 
-const kidsData: MenuCategory[] = [
-  {
-    category: "Kids Menu",
-    note: "For guests under 12 only",
-    items: [
-      { name: "Kids Pancakes", price: "$13", note: "+ toppings $3" },
-      { name: "Mac n Cheese", price: "$12" },
-      { name: "Junior Burger", price: "$15" },
-      { name: "Chicken Strips", price: "$12" },
-      { name: "Grilled Cheese", price: "$12" },
-      { name: "Fruit Salad", price: "$7", note: "Daytime only" },
-    ],
-  },
-];
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
-const dessertsData: MenuCategory[] = [
-  {
-    category: "Homemade Pies",
-    items: [
-      { name: "Apple Pie", price: "$9" },
-      { name: "Sour Cherry", price: "$9" },
-      { name: "Banoffee", price: "$9" },
-      { name: "Peanut Butter Chocolate", price: "$9" },
-      { name: "Key Lime", price: "$9" },
-    ],
-  },
-  {
-    category: "Other Desserts",
-    items: [
-      { name: "Brownie", price: "$6" },
-      { name: "Cookie", price: "$4" },
-      { name: "Ice Cream", price: "$6", note: "Vanilla or chocolate" },
-      { name: "Root Beer Float", price: "$10" },
-      { name: "Coke Float", price: "$10" },
-    ],
-  },
-];
-
-// ─── Animated Particles ────────────────────────────────────────────────────────
-function FloatingParticles({ count = 18 }: { count?: number }) {
-  const particles = Array.from({ length: count }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    size: 2 + Math.random() * 3,
-    duration: 6 + Math.random() * 10,
-    delay: Math.random() * 8,
-    opacity: 0.15 + Math.random() * 0.35,
-  }));
-
+function StarRating() {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((p) => (
-        <motion.div
-          key={p.id}
-          className="absolute rounded-full"
-          style={{
-            left: `${p.x}%`,
-            bottom: "-10px",
-            width: p.size,
-            height: p.size,
-            backgroundColor: `oklch(0.85 0.08 75 / ${p.opacity})`,
-          }}
-          animate={{
-            y: ["-10px", "-100vh"],
-            opacity: [0, p.opacity, p.opacity, 0],
-            x: ["0px", `${(Math.random() - 0.5) * 80}px`],
-          }}
-          transition={{
-            duration: p.duration,
-            delay: p.delay,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-        />
+    <div className="flex gap-0.5" aria-label="5 stars">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
       ))}
     </div>
   );
 }
 
-// ─── Animated Divider ───────────────────────────────────────────────────────────
-function AnimatedDivider() {
+function MenuCard({
+  item,
+  index,
+  qty,
+  onAdd,
+}: {
+  item: MenuItem;
+  index: number;
+  qty: number;
+  onAdd: (name: string) => void;
+}) {
   return (
-    <div className="flex items-center justify-center gap-4 py-2">
-      <motion.div
-        className="h-px flex-1 max-w-32"
-        style={{
-          background:
-            "linear-gradient(to right, transparent, oklch(0.70 0.08 75 / 60%))",
-        }}
-        initial={{ scaleX: 0, opacity: 0 }}
-        whileInView={{ scaleX: 1, opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      />
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{
-          duration: 12,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: "linear",
-        }}
-        style={{ color: "oklch(0.70 0.08 75)" }}
-        className="text-lg"
-      >
-        ✦
-      </motion.div>
-      <motion.div
-        animate={{ scale: [1, 1.4, 1] }}
-        transition={{
-          duration: 2.5,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: "easeInOut",
-        }}
-        style={{ color: "oklch(0.85 0.06 75)" }}
-        className="text-sm"
-      >
-        ✦
-      </motion.div>
-      <motion.div
-        animate={{ rotate: -360 }}
-        transition={{
-          duration: 12,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: "linear",
-        }}
-        style={{ color: "oklch(0.70 0.08 75)" }}
-        className="text-lg"
-      >
-        ✦
-      </motion.div>
-      <motion.div
-        className="h-px flex-1 max-w-32"
-        style={{
-          background:
-            "linear-gradient(to left, transparent, oklch(0.70 0.08 75 / 60%))",
-        }}
-        initial={{ scaleX: 0, opacity: 0 }}
-        whileInView={{ scaleX: 1, opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      />
-    </div>
+    <article
+      className="bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col sm:flex-row lg:flex-col"
+      data-ocid={`menu.item.${index + 1}`}
+    >
+      {/* Image */}
+      <div className="relative overflow-hidden sm:w-44 lg:w-full shrink-0 h-48 sm:h-auto lg:h-48">
+        <img
+          src={item.image}
+          alt={item.name}
+          className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+        />
+        {qty > 0 && (
+          <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-brand-red text-white text-xs font-bold flex items-center justify-center shadow">
+            {qty}
+          </div>
+        )}
+      </div>
+      {/* Content */}
+      <div className="p-5 flex flex-col flex-1">
+        <h3 className="font-display font-semibold text-lg text-foreground mb-1 leading-snug">
+          {item.name}
+        </h3>
+        <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">
+          {item.description}
+        </p>
+        <div className="flex items-center justify-between mt-auto">
+          <span className="text-brand-red font-bold text-xl font-body">
+            ${item.price}
+          </span>
+          <button
+            type="button"
+            onClick={() => onAdd(item.name)}
+            className="bg-brand-brown text-white text-sm font-semibold px-4 py-2 rounded-full hover:opacity-90 active:scale-95 transition-all flex items-center gap-1.5"
+            data-ocid={`menu.primary_button.${index + 1}`}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add
+          </button>
+        </div>
+      </div>
+    </article>
   );
 }
 
-// ─── Shimmer Counter ──────────────────────────────────────────────────────────
-function StatCard({
-  value,
-  label,
-  delay = 0,
-}: { value: string; label: string; delay?: number }) {
+// ─── Cart Bar ─────────────────────────────────────────────────────────────────
+
+function CartBar({
+  cart,
+  onClear,
+  onViewOrder,
+}: {
+  cart: Record<string, number>;
+  onClear: () => void;
+  onViewOrder: () => void;
+}) {
+  const totalQty = Object.values(cart).reduce((s, q) => s + q, 0);
+  const totalPrice = ALL_ITEMS.filter((i) => cart[i.name]).reduce(
+    (s, i) => s + i.price * (cart[i.name] ?? 0),
+    0,
+  );
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, delay }}
-      className="text-center px-6 py-4 relative"
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: 100, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 320, damping: 28 }}
+      className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md"
+      data-ocid="cart.panel"
     >
-      <motion.div
-        className="absolute inset-0 rounded-lg opacity-0"
-        style={{
-          background:
-            "radial-gradient(circle, oklch(0.70 0.08 75 / 8%) 0%, transparent 70%)",
-        }}
-        whileHover={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      />
-      <motion.p
-        className="font-serif text-4xl font-bold mb-1"
-        style={{ color: "oklch(0.94 0.018 78)" }}
-        animate={{ opacity: [0.8, 1, 0.8] }}
-        transition={{
-          duration: 3,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: "easeInOut",
-          delay,
-        }}
+      <button
+        type="button"
+        onClick={onViewOrder}
+        className="w-full bg-brand-red text-white rounded-2xl shadow-2xl px-5 py-4 flex items-center gap-4 hover:opacity-95 active:scale-[0.99] transition-all"
       >
-        {value}
-      </motion.p>
-      <p
-        className="font-sans text-xs uppercase tracking-widest"
-        style={{ color: "oklch(0.65 0.06 75)" }}
-      >
-        {label}
-      </p>
+        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+          <ShoppingBag className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0 text-left">
+          <p className="font-body font-bold text-sm leading-none">
+            {totalQty} {totalQty === 1 ? "item" : "items"} — View Order
+          </p>
+          <p className="font-body text-xs text-white/75 mt-0.5">
+            Tap to review before placing
+          </p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="font-display font-bold text-lg">${totalPrice}</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClear();
+            }}
+            className="w-7 h-7 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors cursor-pointer"
+            aria-label="Clear cart"
+            data-ocid="cart.delete_button"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </button>
     </motion.div>
   );
 }
 
-// ─── Components ──────────────────────────────────────────────────────────────
+// ─── Order Success Dialog ─────────────────────────────────────────────────────
 
-function PolicyBanner() {
-  const [open, setOpen] = useState(true);
+function OrderSuccessDialog({
+  name,
+  orderNumber,
+  onClose,
+}: {
+  name: string;
+  orderNumber: string;
+  onClose: () => void;
+}) {
   return (
-    <div
-      style={{
-        backgroundColor: "oklch(0.37 0.12 25)",
-        color: "oklch(0.96 0.015 75)",
-      }}
-      className="w-full text-sm"
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4"
+      data-ocid="order.dialog"
     >
-      <div className="max-w-6xl mx-auto px-4">
-        <button
-          data-ocid="policy.toggle"
-          type="button"
-          onClick={() => setOpen((p) => !p)}
-          className="w-full flex items-center justify-between py-3 font-sans font-medium tracking-wide uppercase text-xs opacity-90 hover:opacity-100 transition-opacity"
-        >
-          <span className="flex items-center gap-2">
-            <AlertTriangle size={14} />
-            Restaurant Policies & Notices
+      <motion.div
+        initial={{ scale: 0.85, opacity: 0, y: 24 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.85, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 280, damping: 24 }}
+        className="bg-card rounded-3xl shadow-2xl p-10 max-w-sm w-full text-center"
+      >
+        <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2
+            className="w-10 h-10 text-green-500"
+            strokeWidth={1.5}
+          />
+        </div>
+        <h3 className="font-display text-3xl font-bold text-foreground mb-2">
+          Order Placed!
+        </h3>
+        <p className="font-body text-muted-foreground mb-4 leading-relaxed">
+          Thank you <strong className="text-foreground">{name}</strong>! Your
+          order will be delivered in{" "}
+          <span className="text-brand-red font-semibold">30–45 minutes</span>.
+        </p>
+        <div className="inline-flex items-center gap-2 bg-muted/60 rounded-xl px-5 py-3 mb-8">
+          <span className="font-body text-xs text-muted-foreground uppercase tracking-wider">
+            Order #
           </span>
-          {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          <span className="font-display font-bold text-foreground text-lg">
+            {orderNumber}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full bg-brand-red text-white font-body font-bold py-4 rounded-2xl hover:opacity-90 active:scale-95 transition-all text-base"
+          data-ocid="order.primary_button"
+        >
+          Back to Menu
         </button>
-        <AnimatePresence initial={false}>
-          {open && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="overflow-hidden"
-            >
-              <ul className="pb-3 grid sm:grid-cols-2 gap-x-8 gap-y-1 text-xs opacity-90">
-                {[
-                  "Not an allergen-free kitchen — cross-contamination possible",
-                  "People with severe allergies are advised not to dine",
-                  "Brunch order cutoff: 3:45 PM · Dinner order cutoff: 9:30 PM",
-                  "Dining time limit: 90 minutes",
-                  "20% gratuity added for parties of 5+ and delivery/takeout above $200",
-                  "Delivery minimum: $20",
-                ].map((policy) => (
-                  <li key={policy} className="flex items-start gap-1.5">
-                    <span className="mt-0.5 shrink-0">•</span>
-                    {policy}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
-function FeaturedSpotlight() {
+// ─── Order Section ────────────────────────────────────────────────────────────
+
+function OrderSection({
+  cart,
+  onAdd,
+  onRemove,
+  onDelete,
+  onClear,
+}: {
+  cart: Record<string, number>;
+  onAdd: (name: string) => void;
+  onRemove: (name: string) => void;
+  onDelete: (name: string) => void;
+  onClear: () => void;
+}) {
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    instructions: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [orderNumber, setOrderNumber] = useState("");
+
+  const cartItems = ALL_ITEMS.filter((i) => (cart[i.name] ?? 0) > 0);
+  const subtotal = cartItems.reduce(
+    (s, i) => s + i.price * (cart[i.name] ?? 0),
+    0,
+  );
+  const total = subtotal + (cartItems.length > 0 ? DELIVERY_FEE : 0);
+
+  const scrollToMenu = () => {
+    document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.name.trim()) e.name = "Name is required";
+    if (!form.phone.trim()) e.phone = "Phone number is required";
+    if (!form.address.trim()) e.address = "Delivery address is required";
+    return e;
+  };
+
+  const handlePlaceOrder = () => {
+    const e = validate();
+    if (Object.keys(e).length > 0) {
+      setErrors(e);
+      return;
+    }
+    const num = String(Math.floor(1000 + Math.random() * 9000));
+    setOrderNumber(num);
+    setShowSuccess(true);
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    onClear();
+    setForm({ name: "", phone: "", address: "", instructions: "" });
+    setErrors({});
+    document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <section
-      className="w-full py-20 px-4 relative overflow-hidden"
-      style={{ backgroundColor: "oklch(0.12 0.02 25)" }}
-    >
-      {/* Ambient glow blobs */}
-      <motion.div
-        className="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none"
-        style={{ background: "oklch(0.37 0.12 25 / 20%)" }}
-        animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
-        transition={{
-          duration: 6,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: "easeInOut",
-        }}
-      />
-      <motion.div
-        className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full blur-3xl pointer-events-none"
-        style={{ background: "oklch(0.55 0.10 60 / 15%)" }}
-        animate={{ scale: [1.2, 1, 1.2], opacity: [0.1, 0.2, 0.1] }}
-        transition={{
-          duration: 8,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: "easeInOut",
-        }}
-      />
+    <section id="order" className="py-24 bg-muted/20">
+      <AnimatePresence>
+        {showSuccess && (
+          <OrderSuccessDialog
+            name={form.name}
+            orderNumber={orderNumber}
+            onClose={handleSuccessClose}
+          />
+        )}
+      </AnimatePresence>
 
-      <div className="max-w-6xl mx-auto relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-4"
-        >
-          <p
-            className="font-sans uppercase tracking-[0.3em] text-xs mb-2"
-            style={{ color: "oklch(0.70 0.08 75)" }}
-          >
-            House Favorites
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Heading */}
+        <div className="text-center mb-14">
+          <p className="font-body text-xs font-semibold tracking-[0.25em] uppercase text-brand-red mb-3">
+            Delivery & Pickup
           </p>
-          <h2
-            className="font-serif text-3xl md:text-4xl font-bold uppercase tracking-wide"
-            style={{ color: "oklch(0.94 0.018 78)" }}
-          >
-            Crafted to Perfection
+          <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
+            Your Order
           </h2>
-        </motion.div>
-
-        <AnimatedDivider />
-
-        <div className="grid md:grid-cols-2 gap-8 mt-10">
-          {/* Coffee Card */}
-          <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-            whileHover={{ y: -6 }}
-            className="relative group overflow-hidden rounded-2xl cursor-default"
-            style={{ boxShadow: "0 8px 48px rgba(0,0,0,0.6)" }}
-          >
-            <img
-              src="/assets/generated/coffee-premium.dim_800x600.jpg"
-              alt="Premium artisan coffee — side view"
-              className="w-full h-80 object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-            {/* Shimmer sweep on hover */}
-            <motion.div
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(105deg, transparent 40%, rgba(255,230,180,0.12) 50%, transparent 60%)",
-                backgroundSize: "200% 100%",
-              }}
-              animate={{ backgroundPosition: ["-100% 0", "200% 0"] }}
-              transition={{
-                duration: 1.4,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "linear",
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to top, rgba(8,3,2,0.88) 0%, rgba(8,3,2,0.08) 55%)",
-              }}
-            />
-            <div className="absolute bottom-0 left-0 right-0 p-6">
-              <motion.p
-                className="font-sans uppercase tracking-[0.25em] text-xs mb-1"
-                style={{ color: "oklch(0.70 0.08 75)" }}
-                animate={{ opacity: [0.7, 1, 0.7] }}
-                transition={{ duration: 2.5, repeat: Number.POSITIVE_INFINITY }}
-              >
-                Signature
-              </motion.p>
-              <h3
-                className="font-serif text-2xl font-bold"
-                style={{ color: "oklch(0.96 0.018 78)" }}
-              >
-                Artisan Coffee
-              </h3>
-              <p
-                className="font-sans text-sm mt-1"
-                style={{ color: "oklch(0.75 0.02 80)" }}
-              >
-                Perla de Inzá single-origin · Unlimited refills · from $5
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Sandwich Card */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
-            whileHover={{ y: -6 }}
-            className="relative group overflow-hidden rounded-2xl cursor-default"
-            style={{ boxShadow: "0 8px 48px rgba(0,0,0,0.6)" }}
-          >
-            <img
-              src="/assets/generated/sandwich-premium.dim_800x600.jpg"
-              alt="Premium gourmet sandwich — side view"
-              className="w-full h-80 object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-            <motion.div
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(105deg, transparent 40%, rgba(255,230,180,0.12) 50%, transparent 60%)",
-                backgroundSize: "200% 100%",
-              }}
-              animate={{ backgroundPosition: ["-100% 0", "200% 0"] }}
-              transition={{
-                duration: 1.4,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "linear",
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(to top, rgba(8,3,2,0.88) 0%, rgba(8,3,2,0.08) 55%)",
-              }}
-            />
-            <div className="absolute bottom-0 left-0 right-0 p-6">
-              <motion.p
-                className="font-sans uppercase tracking-[0.25em] text-xs mb-1"
-                style={{ color: "oklch(0.70 0.08 75)" }}
-                animate={{ opacity: [0.7, 1, 0.7] }}
-                transition={{
-                  duration: 2.5,
-                  repeat: Number.POSITIVE_INFINITY,
-                  delay: 1,
-                }}
-              >
-                House Classic
-              </motion.p>
-              <h3
-                className="font-serif text-2xl font-bold"
-                style={{ color: "oklch(0.96 0.018 78)" }}
-              >
-                Gourmet Sandwich
-              </h3>
-              <p
-                className="font-sans text-sm mt-1"
-                style={{ color: "oklch(0.75 0.02 80)" }}
-              >
-                Turkey Pastrami Reuben · Turkey B.A.L.T. · from $22
-              </p>
-            </div>
-          </motion.div>
+          <p className="font-body text-muted-foreground max-w-xl mx-auto">
+            Review your items, fill in delivery details, and place your order.
+          </p>
         </div>
 
-        {/* Stats row */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-14 grid grid-cols-3 divide-x"
-          style={{
-            borderColor: "oklch(0.94 0.018 78 / 10%)",
-            border: "1px solid oklch(0.94 0.018 78 / 10%)",
-            borderRadius: "12px",
-          }}
-        >
-          <StatCard value="Est. 1990" label="NYC Institution" delay={0} />
-          <StatCard value="35+" label="Menu Items" delay={0.1} />
-          <StatCard value="5★" label="Signature Dishes" delay={0.2} />
-        </motion.div>
+        {cartItems.length === 0 ? (
+          /* Empty state */
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md mx-auto text-center py-20"
+            data-ocid="order.empty_state"
+          >
+            <div className="w-24 h-24 rounded-full bg-card shadow-card flex items-center justify-center mx-auto mb-6">
+              <ShoppingBag
+                className="w-10 h-10 text-muted-foreground"
+                strokeWidth={1.5}
+              />
+            </div>
+            <h3 className="font-display text-2xl font-bold text-foreground mb-2">
+              Your order is empty
+            </h3>
+            <p className="font-body text-muted-foreground mb-8">
+              Add items from the menu above to get started.
+            </p>
+            <button
+              type="button"
+              onClick={scrollToMenu}
+              className="bg-brand-red text-white font-body font-bold px-8 py-3.5 rounded-full hover:opacity-90 active:scale-95 transition-all"
+              data-ocid="order.primary_button"
+            >
+              Browse Menu
+            </button>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+            {/* ── Left: Cart Items ─────────────────────────────────────── */}
+            <div className="lg:col-span-3 space-y-4">
+              <h3 className="font-display text-xl font-bold text-foreground mb-6">
+                Items in your order
+              </h3>
+
+              {cartItems.map((item, idx) => (
+                <motion.div
+                  key={item.name}
+                  layout
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="bg-card rounded-2xl shadow-card p-4 flex gap-4 items-start"
+                  data-ocid={`order.item.${idx + 1}`}
+                >
+                  {/* Image */}
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-20 h-20 rounded-xl object-cover shrink-0"
+                  />
+
+                  {/* Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="font-display font-semibold text-foreground text-base leading-snug">
+                          {item.name}
+                        </h4>
+                        <p className="font-body text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                          {item.description}
+                        </p>
+                        <p className="font-body text-sm text-muted-foreground mt-1">
+                          ${item.price} each
+                        </p>
+                      </div>
+                      {/* Subtotal */}
+                      <span className="font-display font-bold text-brand-red text-lg shrink-0">
+                        ${item.price * (cart[item.name] ?? 0)}
+                      </span>
+                    </div>
+
+                    {/* Quantity controls */}
+                    <div className="flex items-center gap-2 mt-3">
+                      <button
+                        type="button"
+                        onClick={() => onRemove(item.name)}
+                        className="w-8 h-8 rounded-full border-2 border-border flex items-center justify-center hover:border-brand-red hover:text-brand-red transition-colors"
+                        aria-label="Decrease quantity"
+                        data-ocid={`order.secondary_button.${idx + 1}`}
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="font-body font-bold text-foreground w-6 text-center">
+                        {cart[item.name]}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => onAdd(item.name)}
+                        className="w-8 h-8 rounded-full border-2 border-border flex items-center justify-center hover:border-brand-red hover:text-brand-red transition-colors"
+                        aria-label="Increase quantity"
+                        data-ocid={`order.primary_button.${idx + 1}`}
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDelete(item.name)}
+                        className="ml-2 w-8 h-8 rounded-full border-2 border-border text-muted-foreground flex items-center justify-center hover:border-red-400 hover:text-red-500 transition-colors"
+                        aria-label="Remove item"
+                        data-ocid={`order.delete_button.${idx + 1}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* ── Right: Summary + Form ────────────────────────────────── */}
+            <div className="lg:col-span-2">
+              <div className="sticky top-24 space-y-6">
+                {/* Order Summary Card */}
+                <div
+                  className="bg-card rounded-2xl shadow-card p-6"
+                  data-ocid="order.panel"
+                >
+                  <h3 className="font-display text-xl font-bold text-foreground mb-5">
+                    Order Summary
+                  </h3>
+
+                  <div className="space-y-2 mb-4">
+                    {cartItems.map((item) => (
+                      <div
+                        key={item.name}
+                        className="flex justify-between items-center"
+                      >
+                        <span className="font-body text-sm text-muted-foreground">
+                          {item.name}{" "}
+                          <span className="text-xs">×{cart[item.name]}</span>
+                        </span>
+                        <span className="font-body text-sm font-semibold text-foreground">
+                          ${item.price * (cart[item.name] ?? 0)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="h-px bg-border my-4" />
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="font-body text-sm text-muted-foreground">
+                        Subtotal
+                      </span>
+                      <span className="font-body text-sm text-foreground">
+                        ${subtotal}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-body text-sm text-muted-foreground">
+                        Delivery fee
+                      </span>
+                      <span className="font-body text-sm text-foreground">
+                        ${DELIVERY_FEE}.00
+                      </span>
+                    </div>
+                    <div className="h-px bg-border my-2" />
+                    <div className="flex justify-between items-center">
+                      <span className="font-display font-bold text-foreground text-lg">
+                        Total
+                      </span>
+                      <span className="font-display font-bold text-brand-red text-2xl">
+                        ${total}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Delivery Details Form */}
+                <div className="bg-card rounded-2xl shadow-card p-6">
+                  <h3 className="font-display text-xl font-bold text-foreground mb-5">
+                    Delivery Details
+                  </h3>
+
+                  <div className="space-y-4">
+                    {/* Name */}
+                    <div>
+                      <label
+                        htmlFor="order-name"
+                        className="font-body text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block"
+                      >
+                        Full Name
+                      </label>
+                      <input
+                        id="order-name"
+                        type="text"
+                        value={form.name}
+                        onChange={(e) => {
+                          setForm((p) => ({ ...p, name: e.target.value }));
+                          setErrors((p) => ({ ...p, name: "" }));
+                        }}
+                        placeholder="Your full name"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-red/30 focus:border-brand-red transition-colors"
+                        data-ocid="order.input"
+                      />
+                      {errors.name && (
+                        <p
+                          className="font-body text-xs text-red-500 mt-1"
+                          data-ocid="order.error_state"
+                        >
+                          {errors.name}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Phone */}
+                    <div>
+                      <label
+                        htmlFor="order-phone"
+                        className="font-body text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block"
+                      >
+                        Phone Number
+                      </label>
+                      <input
+                        id="order-phone"
+                        type="tel"
+                        value={form.phone}
+                        onChange={(e) => {
+                          setForm((p) => ({ ...p, phone: e.target.value }));
+                          setErrors((p) => ({ ...p, phone: "" }));
+                        }}
+                        placeholder="(212) 555-0100"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-red/30 focus:border-brand-red transition-colors"
+                        data-ocid="order.input"
+                      />
+                      {errors.phone && (
+                        <p
+                          className="font-body text-xs text-red-500 mt-1"
+                          data-ocid="order.error_state"
+                        >
+                          {errors.phone}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Address */}
+                    <div>
+                      <label
+                        htmlFor="order-address"
+                        className="font-body text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block"
+                      >
+                        Delivery Address
+                      </label>
+                      <input
+                        id="order-address"
+                        type="text"
+                        value={form.address}
+                        onChange={(e) => {
+                          setForm((p) => ({ ...p, address: e.target.value }));
+                          setErrors((p) => ({ ...p, address: "" }));
+                        }}
+                        placeholder="123 Main St, New York, NY"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-red/30 focus:border-brand-red transition-colors"
+                        data-ocid="order.input"
+                      />
+                      {errors.address && (
+                        <p
+                          className="font-body text-xs text-red-500 mt-1"
+                          data-ocid="order.error_state"
+                        >
+                          {errors.address}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Special Instructions */}
+                    <div>
+                      <label
+                        htmlFor="order-instructions"
+                        className="font-body text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block"
+                      >
+                        Special Instructions{" "}
+                        <span className="normal-case font-normal">
+                          (optional)
+                        </span>
+                      </label>
+                      <textarea
+                        id="order-instructions"
+                        value={form.instructions}
+                        onChange={(e) =>
+                          setForm((p) => ({
+                            ...p,
+                            instructions: e.target.value,
+                          }))
+                        }
+                        placeholder="Allergies, dietary preferences..."
+                        rows={3}
+                        className="w-full bg-background border border-border rounded-xl px-4 py-3 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-red/30 focus:border-brand-red transition-colors resize-none"
+                        data-ocid="order.textarea"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handlePlaceOrder}
+                      className="w-full bg-brand-red text-white font-body font-bold py-4 rounded-2xl hover:opacity-90 active:scale-95 transition-all text-base mt-2"
+                      data-ocid="order.submit_button"
+                    >
+                      Place Order · ${total}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
-function MenuItemRow({ item, index }: { item: MenuItem; index: number }) {
-  return (
-    <motion.div
-      data-ocid={`menu.item.${index + 1}`}
-      className="flex items-start justify-between gap-4 py-2.5 border-b border-maroon/10 last:border-0 group"
-      initial={{ opacity: 0, x: -8 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.3, delay: Math.min(index * 0.025, 0.4) }}
-    >
-      <div className="flex-1 min-w-0">
-        <span className="font-sans font-medium text-foreground text-sm leading-snug group-hover:text-primary transition-colors">
-          {item.name}
-        </span>
-        {item.note && (
-          <p className="text-xs text-muted-foreground mt-0.5 font-sans">
-            {item.note}
-          </p>
-        )}
-      </div>
-      <span
-        className="font-serif font-semibold text-sm shrink-0 tabular-nums"
-        style={{ color: "oklch(0.37 0.12 25)" }}
-      >
-        {item.price}
-      </span>
-    </motion.div>
-  );
-}
+// ─── Reservation Section ──────────────────────────────────────────────────────
 
-function WineSection() {
-  const WineTable = ({
-    title,
-    items,
-  }: {
-    title: string;
-    items: { name: string; glass: string | null; bottle: string }[];
-  }) => (
-    <div className="mb-6">
-      <h4
-        className="font-serif text-sm font-semibold uppercase tracking-widest mb-3 pb-1 border-b"
-        style={{
-          color: "oklch(0.37 0.12 25)",
-          borderColor: "oklch(0.37 0.12 25 / 20%)",
-        }}
-      >
-        {title}
-      </h4>
-      <div className="space-y-0">
-        {items.map((wine) => (
-          <div
-            key={wine.name}
-            data-ocid="wine.item.1"
-            className="flex items-center justify-between py-2.5 border-b border-maroon/10 last:border-0 group"
-          >
-            <span className="font-sans font-medium text-sm text-foreground group-hover:text-primary transition-colors">
-              {wine.name}
-            </span>
-            <div className="flex gap-4 items-center">
-              {wine.glass ? (
-                <span className="text-xs text-muted-foreground font-sans">
-                  <span className="inline-flex items-center gap-1">
-                    <GlassWater size={11} />
-                    {wine.glass}
-                  </span>
-                </span>
-              ) : (
-                <span className="text-xs text-muted-foreground font-sans w-12" />
-              )}
-              <span className="text-xs text-muted-foreground font-sans">
-                <span className="inline-flex items-center gap-1">
-                  <Wine size={11} />
-                  {wine.bottle}
-                </span>
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-  return (
-    <div>
-      <WineTable title="Sparkling & Rosé" items={winesData.sparklingRose} />
-      <WineTable title="White Wine" items={winesData.white} />
-      <WineTable title="Red Wine" items={winesData.red} />
-      <p className="text-xs text-muted-foreground font-sans mt-2">
-        <GlassWater size={11} className="inline mr-1" />
-        Glass&nbsp;&nbsp;
-        <Wine size={11} className="inline mr-1" />
-        Bottle
-      </p>
-    </div>
-  );
-}
-
-function CategorySection({
-  cat,
-  startIndex,
-}: { cat: MenuCategory; startIndex: number }) {
-  return (
-    <div className="mb-8">
-      <div className="flex items-baseline gap-3 mb-3">
-        <h3
-          className="font-serif text-base font-semibold uppercase tracking-widest"
-          style={{ color: "oklch(0.37 0.12 25)" }}
-        >
-          {cat.category}
-        </h3>
-        {cat.note && (
-          <span className="text-xs font-sans text-muted-foreground italic">
-            {cat.note}
-          </span>
-        )}
-      </div>
-      <div>
-        {cat.items.map((item, i) => (
-          <MenuItemRow key={item.name} item={item} index={startIndex + i} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MenuSectionContent({
-  categories,
-  showWines = false,
-}: { categories: MenuCategory[]; showWines?: boolean }) {
-  let runningIndex = 0;
-  return (
-    <motion.div
-      key={categories[0]?.category}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-    >
-      <div className="grid md:grid-cols-2 gap-x-12">
-        {categories.map((cat) => {
-          const section = (
-            <CategorySection
-              key={cat.category}
-              cat={cat}
-              startIndex={runningIndex}
-            />
-          );
-          runningIndex += cat.items.length;
-          return section;
-        })}
-        {showWines && (
-          <div className="mb-8 md:col-span-2">
-            <div className="flex items-baseline gap-3 mb-3">
-              <h3
-                className="font-serif text-base font-semibold uppercase tracking-widest"
-                style={{ color: "oklch(0.37 0.12 25)" }}
-              >
-                Wines
-              </h3>
-            </div>
-            <WineSection />
-          </div>
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
-// ─── Main App ─────────────────────────────────────────────────────────────────
-const TABS = [
-  { id: "drinks", label: "Drinks" },
-  { id: "brunch", label: "Brunch" },
-  { id: "dinner", label: "Dinner" },
-  { id: "kids", label: "Kids" },
-  { id: "desserts", label: "Desserts" },
-] as const;
-
-type TabId = (typeof TABS)[number]["id"];
-
-export default function App() {
-  const [activeTab, setActiveTab] = useState<TabId>("brunch");
-  const heroRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
+function ReservationSection() {
+  const [form, setForm] = useState({
+    name: "",
+    date: "",
+    time: "",
+    guests: "",
   });
-  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState(false);
 
-  // Typewriter for tagline
-  const tagline = "World Famous Pancakes & Classic American Comfort Food";
-  const [displayed, setDisplayed] = useState("");
-  useEffect(() => {
-    let i = 0;
-    const timer = setInterval(() => {
-      setDisplayed(tagline.slice(0, i + 1));
-      i++;
-      if (i >= tagline.length) clearInterval(timer);
-    }, 38);
-    return () => clearInterval(timer);
-  }, []);
-
-  const scrollToMenu = () => {
-    document
-      .getElementById("menu-section")
-      ?.scrollIntoView({ behavior: "smooth" });
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.name.trim()) e.name = "Name is required";
+    if (!form.date) e.date = "Please select a date";
+    if (!form.time) e.time = "Please select a time";
+    if (!form.guests) e.guests = "Please select number of guests";
+    return e;
   };
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <PolicyBanner />
+  const handleSubmit = () => {
+    const e = validate();
+    if (Object.keys(e).length > 0) {
+      setErrors(e);
+      return;
+    }
+    setSubmitted(true);
+  };
 
-      {/* Sticky Header */}
-      <header
-        className="sticky top-0 z-50 w-full shadow-parchment"
-        style={{ backgroundColor: "oklch(0.94 0.022 80)" }}
-      >
-        <div className="max-w-6xl mx-auto px-4 py-0">
-          <div className="flex items-center justify-between h-16">
+  const today = new Date().toISOString().split("T")[0];
+
+  return (
+    <section id="reserve" className="py-24 bg-background">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-14">
+          <p className="font-body text-xs font-semibold tracking-[0.25em] uppercase text-brand-red mb-3">
+            Book Your Table
+          </p>
+          <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight">
+            Make a
+            <span className="block italic text-brand-brown">Reservation</span>
+          </h2>
+          <p className="font-body text-muted-foreground max-w-xl mx-auto">
+            Reserve your table at Bubby's — walk-ins always welcome,
+            reservations recommended on weekends.
+          </p>
+        </div>
+
+        <div className="max-w-2xl mx-auto">
+          {submitted ? (
             <motion.div
-              className="font-serif font-bold text-2xl tracking-[0.15em] uppercase select-none"
-              style={{ color: "oklch(0.32 0.11 25)" }}
-              whileHover={{ letterSpacing: "0.22em" }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-card rounded-3xl shadow-card p-10 text-center"
+              data-ocid="reservation.success_state"
             >
-              Bubby's
+              <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2
+                  className="w-10 h-10 text-green-500"
+                  strokeWidth={1.5}
+                />
+              </div>
+              <h3 className="font-display text-3xl font-bold text-foreground mb-3">
+                Reservation Received!
+              </h3>
+              <p className="font-body text-muted-foreground leading-relaxed mb-2">
+                Thank you,{" "}
+                <strong className="text-foreground">{form.name}</strong>!
+              </p>
+              <p className="font-body text-muted-foreground leading-relaxed mb-8">
+                We&rsquo;ll confirm your reservation shortly. See you on{" "}
+                <span className="font-semibold text-brand-brown">
+                  {new Date(`${form.date}T00:00:00`).toLocaleDateString(
+                    "en-US",
+                    { weekday: "long", month: "long", day: "numeric" },
+                  )}
+                </span>{" "}
+                at{" "}
+                <span className="font-semibold text-brand-brown">
+                  {form.time}
+                </span>{" "}
+                for{" "}
+                <span className="font-semibold text-brand-brown">
+                  {form.guests}{" "}
+                  {Number.parseInt(form.guests) === 1 ? "guest" : "guests"}
+                </span>
+                .
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSubmitted(false);
+                  setForm({ name: "", date: "", time: "", guests: "" });
+                }}
+                className="font-body text-sm text-brand-red underline-offset-2 hover:underline"
+              >
+                Make another reservation
+              </button>
             </motion.div>
-            <nav
-              className="hidden md:flex items-center gap-1"
-              aria-label="Menu sections"
+          ) : (
+            <div
+              className="bg-card rounded-3xl shadow-card p-8 md:p-10"
+              data-ocid="reservation.panel"
             >
-              {TABS.map((tab) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Name */}
+                <div className="md:col-span-2">
+                  <label
+                    htmlFor="res-name"
+                    className="font-body text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block"
+                  >
+                    Your Name
+                  </label>
+                  <input
+                    id="res-name"
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => {
+                      setForm((p) => ({ ...p, name: e.target.value }));
+                      setErrors((p) => ({ ...p, name: "" }));
+                    }}
+                    placeholder="Full name"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3.5 font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand-brown/30 focus:border-brand-brown transition-colors"
+                    data-ocid="reservation.input"
+                  />
+                  {errors.name && (
+                    <p
+                      className="font-body text-xs text-red-500 mt-1"
+                      data-ocid="reservation.error_state"
+                    >
+                      {errors.name}
+                    </p>
+                  )}
+                </div>
+
+                {/* Date */}
+                <div>
+                  <label
+                    htmlFor="res-date"
+                    className="font-body text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block"
+                  >
+                    Date
+                  </label>
+                  <input
+                    id="res-date"
+                    type="date"
+                    min={today}
+                    value={form.date}
+                    onChange={(e) => {
+                      setForm((p) => ({ ...p, date: e.target.value }));
+                      setErrors((p) => ({ ...p, date: "" }));
+                    }}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3.5 font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand-brown/30 focus:border-brand-brown transition-colors"
+                    data-ocid="reservation.input"
+                  />
+                  {errors.date && (
+                    <p
+                      className="font-body text-xs text-red-500 mt-1"
+                      data-ocid="reservation.error_state"
+                    >
+                      {errors.date}
+                    </p>
+                  )}
+                </div>
+
+                {/* Time */}
+                <div>
+                  <label
+                    htmlFor="res-time"
+                    className="font-body text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block"
+                  >
+                    Time
+                  </label>
+                  <select
+                    id="res-time"
+                    value={form.time}
+                    onChange={(e) => {
+                      setForm((p) => ({ ...p, time: e.target.value }));
+                      setErrors((p) => ({ ...p, time: "" }));
+                    }}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3.5 font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand-brown/30 focus:border-brand-brown transition-colors appearance-none cursor-pointer"
+                    data-ocid="reservation.select"
+                  >
+                    <option value="" disabled>
+                      Select a time
+                    </option>
+                    {[
+                      "9:00 AM",
+                      "9:30 AM",
+                      "10:00 AM",
+                      "10:30 AM",
+                      "11:00 AM",
+                      "11:30 AM",
+                      "12:00 PM",
+                      "12:30 PM",
+                      "1:00 PM",
+                      "1:30 PM",
+                      "2:00 PM",
+                      "2:30 PM",
+                      "5:00 PM",
+                      "5:30 PM",
+                      "6:00 PM",
+                      "6:30 PM",
+                      "7:00 PM",
+                      "7:30 PM",
+                      "8:00 PM",
+                      "8:30 PM",
+                      "9:00 PM",
+                    ].map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.time && (
+                    <p
+                      className="font-body text-xs text-red-500 mt-1"
+                      data-ocid="reservation.error_state"
+                    >
+                      {errors.time}
+                    </p>
+                  )}
+                </div>
+
+                {/* Guests */}
+                <div className="md:col-span-2">
+                  <label
+                    htmlFor="res-guests"
+                    className="font-body text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block"
+                  >
+                    Number of Guests
+                  </label>
+                  <select
+                    id="res-guests"
+                    value={form.guests}
+                    onChange={(e) => {
+                      setForm((p) => ({ ...p, guests: e.target.value }));
+                      setErrors((p) => ({ ...p, guests: "" }));
+                    }}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3.5 font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-brand-brown/30 focus:border-brand-brown transition-colors appearance-none cursor-pointer"
+                    data-ocid="reservation.select"
+                  >
+                    <option value="" disabled>
+                      Select number of guests
+                    </option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                      <option key={n} value={String(n)}>
+                        {n} {n === 1 ? "Guest" : "Guests"}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.guests && (
+                    <p
+                      className="font-body text-xs text-red-500 mt-1"
+                      data-ocid="reservation.error_state"
+                    >
+                      {errors.guests}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="w-full mt-8 bg-brand-brown text-white font-body font-bold py-4 rounded-2xl hover:opacity-90 active:scale-95 transition-all text-base"
+                data-ocid="reservation.submit_button"
+              >
+                Reserve Table
+              </button>
+
+              <p className="text-center font-body text-xs text-muted-foreground mt-4">
+                Walk-ins always welcome · Reservations recommended on weekends
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── App ─────────────────────────────────────────────────────────────────────
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState<MenuCategory>("pancakes");
+  const [cart, setCart] = useState<Record<string, number>>({});
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLElement>(null);
+
+  const hasCart = Object.values(cart).some((q) => q > 0);
+
+  const handleAdd = (name: string) => {
+    setCart((p) => ({ ...p, [name]: (p[name] ?? 0) + 1 }));
+  };
+
+  const handleRemove = (name: string) => {
+    setCart((p) => {
+      const qty = (p[name] ?? 0) - 1;
+      if (qty <= 0) {
+        const next = { ...p };
+        delete next[name];
+        return next;
+      }
+      return { ...p, [name]: qty };
+    });
+  };
+
+  const handleDelete = (name: string) => {
+    setCart((p) => {
+      const next = { ...p };
+      delete next[name];
+      return next;
+    });
+  };
+
+  const scrollToMenu = () =>
+    document.getElementById("menu")?.scrollIntoView({ behavior: "smooth" });
+  const scrollToOrder = () =>
+    document.getElementById("order")?.scrollIntoView({ behavior: "smooth" });
+  const scrollToReserve = () =>
+    document.getElementById("reserve")?.scrollIntoView({ behavior: "smooth" });
+
+  // Close mobile menu on outside click
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handler = () => setMobileMenuOpen(false);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [mobileMenuOpen]);
+
+  const NAV_LINKS = [
+    { label: "Menu", href: "#menu" },
+    { label: "Our Story", href: "#story" },
+    { label: "Reservations", href: "#reserve" },
+    { label: "Order Online", href: "#order", badge: hasCart },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <header
+        className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm shadow-nav"
+        data-ocid="nav.panel"
+      >
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <a
+            href="#story"
+            className="font-display text-2xl font-bold text-brand-brown"
+            data-ocid="nav.link"
+          >
+            Bubby&rsquo;s
+          </a>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-6">
+            {NAV_LINKS.map(({ label, href, badge }) => (
+              <a
+                key={label}
+                href={href}
+                className="font-body text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+                data-ocid="nav.link"
+              >
+                {label}
+                {badge && (
+                  <span className="w-2.5 h-2.5 rounded-full bg-brand-red" />
+                )}
+              </a>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <a
+              href="#reserve"
+              className="hidden md:inline-flex bg-brand-brown text-white font-body font-bold text-sm px-5 py-2.5 rounded-full hover:opacity-90 active:scale-95 transition-all"
+              data-ocid="nav.primary_button"
+            >
+              Reserve Table
+            </a>
+            <button
+              type="button"
+              className="md:hidden p-2 text-foreground"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMobileMenuOpen((v) => !v);
+              }}
+              aria-label="Toggle menu"
+              data-ocid="nav.toggle"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div
+            className="md:hidden bg-background border-t border-border px-6 py-4 flex flex-col gap-4"
+            role="menu"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            {NAV_LINKS.map(({ label, href, badge }) => (
+              <a
+                key={label}
+                href={href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="font-body text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 py-1"
+                data-ocid="nav.link"
+              >
+                {label}
+                {badge && (
+                  <span className="w-2.5 h-2.5 rounded-full bg-brand-red" />
+                )}
+              </a>
+            ))}
+          </div>
+        )}
+      </header>
+
+      {/* ── Hero ────────────────────────────────────────────────────────── */}
+      <section
+        className="relative min-h-screen flex items-center justify-center overflow-hidden"
+        aria-label="Hero"
+      >
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage:
+              "url('/assets/generated/hero-pancakes.dim_1400x800.jpg')",
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
+
+        <div className="relative z-10 text-center text-white px-6 max-w-3xl mx-auto">
+          <p className="font-body text-sm font-medium tracking-[0.2em] uppercase text-yellow-300 mb-4 animate-fade-in">
+            Est. 1990 — TriBeCa, New York
+          </p>
+          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6 animate-fade-up">
+            Classic American
+            <span className="block italic text-yellow-200">Comfort Food</span>
+            Since 1990
+          </h1>
+          <p className="font-body text-lg md:text-xl text-white/85 mb-10 leading-relaxed animate-fade-up">
+            Serving New York&rsquo;s favorite pancakes, pies,
+            <br className="hidden md:block" /> and brunch classics
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up">
+            <button
+              type="button"
+              onClick={scrollToReserve}
+              className="bg-brand-red text-white font-body font-bold px-8 py-4 rounded-full text-base hover:opacity-90 active:scale-95 transition-all shadow-lg"
+              data-ocid="hero.primary_button"
+            >
+              Reserve a Table
+            </button>
+            <button
+              type="button"
+              onClick={scrollToMenu}
+              className="border-2 border-white text-white font-body font-bold px-8 py-4 rounded-full text-base hover:bg-white hover:text-brand-dark active:scale-95 transition-all"
+              data-ocid="hero.secondary_button"
+            >
+              View Menu
+            </button>
+          </div>
+        </div>
+
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 animate-bounce">
+          <ChevronDown className="w-6 h-6" />
+        </div>
+      </section>
+
+      {/* ── Brand Story ─────────────────────────────────────────────────── */}
+      <section id="story" className="py-24 bg-background">
+        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
+          <div>
+            <p className="font-body text-xs font-semibold tracking-[0.25em] uppercase text-brand-red mb-3">
+              Our Heritage
+            </p>
+            <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
+              A New York
+              <span className="block italic text-brand-brown">Tradition</span>
+            </h2>
+            <div className="w-16 h-1 bg-brand-red rounded-full mb-8" />
+            <p className="font-body text-muted-foreground leading-relaxed mb-5 text-lg">
+              Since Ron Silver opened Bubby&rsquo;s doors in 1990, we&rsquo;ve
+              been more than just a restaurant — we&rsquo;re a gathering place.
+              Our recipes were passed down from grandmothers who cooked from the
+              heart, filling kitchens with the smell of fresh-baked pies and
+              golden pancakes.
+            </p>
+            <p className="font-body text-muted-foreground leading-relaxed mb-5">
+              In the heart of TriBeCa, we&rsquo;ve watched the neighborhood grow
+              and change around us, but one thing has never wavered: our
+              commitment to honest, soulful American comfort food. Every
+              ingredient is sourced with care, every dish made with love.
+            </p>
+            <p className="font-body text-muted-foreground leading-relaxed">
+              Generations of New Yorkers have celebrated birthdays, first dates,
+              Sunday mornings, and life&rsquo;s quiet moments at our tables.
+              That&rsquo;s the tradition we&rsquo;re honored to carry forward.
+            </p>
+          </div>
+
+          <div className="relative">
+            <div className="bg-card rounded-3xl p-10 shadow-card">
+              <div className="grid grid-cols-3 gap-6 mb-10">
+                {[
+                  { value: "30+", label: "Years Serving NYC" },
+                  { value: "Millions", label: "Guests Welcomed" },
+                  { value: "1", label: "Iconic Location" },
+                ].map(({ value, label }) => (
+                  <div key={label} className="text-center">
+                    <div className="font-display text-3xl md:text-4xl font-bold text-brand-red mb-2">
+                      {value}
+                    </div>
+                    <div className="font-body text-xs text-muted-foreground uppercase tracking-wide">
+                      {label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-2xl overflow-hidden h-72">
+                <img
+                  src="/assets/generated/breakfast-plate.dim_600x400.jpg"
+                  alt="Bubby's classic breakfast"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-brand-red flex flex-col items-center justify-center text-white shadow-lg">
+                <span className="font-display font-bold text-xl leading-none">
+                  Est.
+                </span>
+                <span className="font-display font-bold text-2xl leading-none">
+                  1990
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Menu ────────────────────────────────────────────────────────── */}
+      <section id="menu" ref={menuRef} className="py-24 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <p className="font-body text-xs font-semibold tracking-[0.25em] uppercase text-brand-red mb-3">
+              Handcrafted Daily
+            </p>
+            <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
+              Our Menu
+            </h2>
+            <p className="font-body text-muted-foreground max-w-xl mx-auto">
+              Fresh ingredients, family recipes, made with love every single
+              day.
+            </p>
+          </div>
+
+          {/* Category Tabs */}
+          <div className="flex justify-center mb-10" data-ocid="menu.tab">
+            <div className="flex gap-1 bg-card rounded-full p-1.5 shadow-card overflow-x-auto max-w-full">
+              {CATEGORY_LABELS.map(({ key, label }) => (
                 <button
-                  key={tab.id}
                   type="button"
-                  data-ocid={`nav.${tab.id}.tab`}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    scrollToMenu();
-                  }}
-                  className={`px-4 py-2 text-sm font-sans font-medium uppercase tracking-wider rounded-sm transition-all duration-200 ${
-                    activeTab === tab.id
-                      ? "text-primary-foreground"
-                      : "hover:bg-maroon/10"
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`font-body font-semibold text-sm px-5 py-2.5 rounded-full whitespace-nowrap transition-all duration-200 ${
+                    activeTab === key
+                      ? "bg-brand-brown text-white shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
-                  style={
-                    activeTab === tab.id
-                      ? {
-                          backgroundColor: "oklch(0.37 0.12 25)",
-                          color: "oklch(0.96 0.015 75)",
-                        }
-                      : { color: "oklch(0.37 0.12 25)" }
-                  }
+                  data-ocid="menu.tab"
                 >
-                  {tab.label}
+                  {label}
                 </button>
               ))}
-            </nav>
-            <a
-              href="tel:2122190666"
-              data-ocid="header.phone.button"
-              className="hidden md:flex items-center gap-2 text-sm font-sans font-medium px-4 py-2 rounded-sm border-2 transition-all duration-200 hover:text-primary-foreground"
-              style={{
-                borderColor: "oklch(0.37 0.12 25)",
-                color: "oklch(0.37 0.12 25)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                  "oklch(0.37 0.12 25)";
-                (e.currentTarget as HTMLAnchorElement).style.color =
-                  "oklch(0.96 0.015 75)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.backgroundColor =
-                  "transparent";
-                (e.currentTarget as HTMLAnchorElement).style.color =
-                  "oklch(0.37 0.12 25)";
-              }}
-            >
-              <Phone size={14} />
-              Reserve
-            </a>
+            </div>
           </div>
-          <div className="md:hidden flex gap-1 pb-2 overflow-x-auto scrollbar-hide">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                data-ocid={`mobile.nav.${tab.id}.tab`}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  scrollToMenu();
-                }}
-                className="shrink-0 px-3 py-1.5 text-xs font-sans font-medium uppercase tracking-wider rounded-sm transition-all duration-200"
-                style={
-                  activeTab === tab.id
-                    ? {
-                        backgroundColor: "oklch(0.37 0.12 25)",
-                        color: "oklch(0.96 0.015 75)",
-                      }
-                    : {
-                        color: "oklch(0.37 0.12 25)",
-                        border: "1px solid oklch(0.37 0.12 25 / 30%)",
-                      }
-                }
+
+          {/* Menu Grid */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            >
+              {MENU_ITEMS[activeTab].map((item, i) => (
+                <MenuCard
+                  key={item.name}
+                  item={item}
+                  index={i}
+                  qty={cart[item.name] ?? 0}
+                  onAdd={handleAdd}
+                />
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </section>
+
+      {/* ── Order Section ───────────────────────────────────────────────── */}
+      <OrderSection
+        cart={cart}
+        onAdd={handleAdd}
+        onRemove={handleRemove}
+        onDelete={handleDelete}
+        onClear={() => setCart({})}
+      />
+
+      {/* ── Reservation Section ─────────────────────────────────────────── */}
+      <ReservationSection />
+
+      {/* ── Why Choose Us ───────────────────────────────────────────────── */}
+      <section className="py-20 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <p className="font-body text-xs font-semibold tracking-[0.25em] uppercase text-brand-red mb-3">
+              Why Bubby&rsquo;s
+            </p>
+            <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground">
+              Why Choose Us
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                icon: "🏆",
+                title: "30+ Years of Tradition",
+                desc: "Since 1990, serving New York with the same love and care in every dish.",
+              },
+              {
+                icon: "🌿",
+                title: "Locally Sourced",
+                desc: "We partner with local farms for the freshest, highest-quality ingredients.",
+              },
+              {
+                icon: "🗽",
+                title: "Famous NYC Brunch",
+                desc: "A beloved TriBeCa institution, consistently rated one of NYC&rsquo;s best brunch spots.",
+              },
+              {
+                icon: "❤️",
+                title: "Loved by Thousands",
+                desc: "Generations of New Yorkers return week after week — that says it all.",
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="bg-card rounded-2xl p-7 shadow-card text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
               >
-                {tab.label}
-              </button>
+                <div className="text-4xl mb-4">{item.icon}</div>
+                <h3 className="font-display font-semibold text-lg text-foreground mb-2">
+                  {item.title}
+                </h3>
+                <p className="font-body text-sm text-muted-foreground leading-relaxed">
+                  {item.desc}
+                </p>
+              </div>
             ))}
           </div>
         </div>
-      </header>
-
-      {/* Hero with parallax + particles + typewriter */}
-      <section
-        ref={heroRef}
-        className="relative w-full overflow-hidden"
-        style={{ minHeight: "480px" }}
-      >
-        <motion.img
-          src="/assets/generated/bubbys-hero.dim_1600x700.jpg"
-          alt="Bubby's restaurant"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ y: heroY }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(26,10,8,0.55) 0%, rgba(26,10,8,0.75) 100%)",
-          }}
-        />
-        <FloatingParticles count={22} />
-        <motion.div
-          style={{ opacity: heroOpacity }}
-          className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-28"
-        >
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="font-sans uppercase tracking-[0.3em] text-xs mb-4"
-            style={{ color: "oklch(0.85 0.08 75)" }}
-          >
-            New York City · Est. 1990
-          </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.7 }}
-            className="font-serif text-5xl md:text-7xl font-bold uppercase tracking-wide mb-4"
-            style={{
-              color: "oklch(0.96 0.025 75)",
-              textShadow: "0 2px 32px rgba(0,0,0,0.5)",
-            }}
-          >
-            Bubby's
-          </motion.h1>
-          {/* Typewriter tagline */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.4 }}
-            className="font-serif italic text-xl md:text-2xl mb-8 min-h-[2rem]"
-            style={{ color: "oklch(0.88 0.04 75)" }}
-          >
-            {displayed}
-            <motion.span
-              animate={{ opacity: [1, 0] }}
-              transition={{ duration: 0.6, repeat: Number.POSITIVE_INFINITY }}
-            >
-              |
-            </motion.span>
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
-            className="flex flex-wrap justify-center items-center gap-6 text-sm font-sans"
-            style={{ color: "oklch(0.80 0.04 75)" }}
-          >
-            <span className="flex items-center gap-1.5">
-              <Clock size={14} />
-              Brunch 8 AM – 4 PM
-            </span>
-            <span className="w-px h-4 bg-current opacity-30" />
-            <span className="flex items-center gap-1.5">
-              <Clock size={14} />
-              Dinner until 9:30 PM
-            </span>
-            <span className="w-px h-4 bg-current opacity-30 hidden sm:block" />
-            <span className="hidden sm:flex items-center gap-1.5">
-              <Phone size={14} />
-              212-219-0666
-            </span>
-          </motion.div>
-          {/* Scroll cue */}
-          <motion.button
-            onClick={scrollToMenu}
-            type="button"
-            className="mt-10 flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity"
-            style={{ color: "oklch(0.85 0.06 75)" }}
-            animate={{ y: [0, 8, 0] }}
-            transition={{
-              duration: 2,
-              repeat: Number.POSITIVE_INFINITY,
-              ease: "easeInOut",
-            }}
-          >
-            <span className="font-sans text-xs uppercase tracking-widest">
-              View Menu
-            </span>
-            <ChevronDown size={18} />
-          </motion.button>
-        </motion.div>
       </section>
 
-      {/* Featured Spotlight */}
-      <FeaturedSpotlight />
-
-      {/* Menu Section */}
-      <main id="menu-section" className="flex-1 py-12 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              <p
-                className="font-sans uppercase tracking-[0.25em] text-xs mb-2"
-                style={{ color: "oklch(0.37 0.12 25)" }}
-              >
-                Our Menu
-              </p>
-              <h2
-                className="font-serif text-4xl font-bold uppercase tracking-wide"
-                style={{ color: "oklch(0.32 0.11 25)" }}
-              >
-                {TABS.find((t) => t.id === activeTab)?.label}
-                {activeTab === "brunch" && (
-                  <span
-                    className="ml-3 font-sans text-sm font-normal normal-case tracking-normal"
-                    style={{ color: "oklch(0.37 0.12 25 / 70%)" }}
-                  >
-                    8 AM – 4 PM
-                  </span>
-                )}
-              </h2>
-              <motion.div
-                className="mx-auto mt-3 h-0.5 w-16 rounded-full"
-                style={{ backgroundColor: "oklch(0.37 0.12 25)" }}
-                layoutId="menu-underline"
-              />
-            </motion.div>
+      {/* ── Testimonials ────────────────────────────────────────────────── */}
+      <section className="py-24 bg-background">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-14">
+            <p className="font-body text-xs font-semibold tracking-[0.25em] uppercase text-brand-red mb-3">
+              Guest Reviews
+            </p>
+            <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground">
+              What New Yorkers Say
+            </h2>
           </div>
 
-          <div
-            className="rounded-lg border-2 p-6 md:p-10 shadow-parchment"
-            style={{
-              backgroundColor: "oklch(0.96 0.018 78)",
-              borderColor: "oklch(0.37 0.12 25 / 35%)",
-            }}
-          >
-            <AnimatePresence mode="wait">
-              {activeTab === "drinks" && (
-                <MenuSectionContent
-                  key="drinks"
-                  categories={drinksData}
-                  showWines
-                />
-              )}
-              {activeTab === "brunch" && (
-                <MenuSectionContent key="brunch" categories={brunchData} />
-              )}
-              {activeTab === "dinner" && (
-                <MenuSectionContent key="dinner" categories={dinnerData} />
-              )}
-              {activeTab === "kids" && (
-                <MenuSectionContent key="kids" categories={kidsData} />
-              )}
-              {activeTab === "desserts" && (
-                <MenuSectionContent key="desserts" categories={dessertsData} />
-              )}
-            </AnimatePresence>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {TESTIMONIALS.map((t, i) => (
+              <motion.article
+                key={t.name}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-card rounded-2xl p-8 shadow-card hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-border/50"
+                data-ocid={`testimonials.item.${i + 1}`}
+              >
+                <StarRating />
+                <blockquote className="font-display text-foreground leading-relaxed mt-5 mb-6 text-lg italic">
+                  &ldquo;{t.quote}&rdquo;
+                </blockquote>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-brand-red/10 flex items-center justify-center">
+                    <span className="font-display font-bold text-brand-red text-sm">
+                      {t.name[0]}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-body font-semibold text-foreground text-sm">
+                      – {t.name}
+                    </p>
+                    <p className="font-body text-xs text-muted-foreground">
+                      {t.location}
+                    </p>
+                  </div>
+                </div>
+              </motion.article>
+            ))}
           </div>
-
-          <p className="text-center text-xs text-muted-foreground font-sans mt-6">
-            ⚠️ Raw/undercooked food items may be served. Some dishes contain leaf
-            lard. Consuming raw or undercooked meats, poultry, seafood, or eggs
-            may increase your risk of foodborne illness.
-          </p>
         </div>
-      </main>
+      </section>
 
-      {/* Footer */}
-      <footer
-        className="w-full py-12 px-4 mt-8"
-        style={{ backgroundColor: "oklch(0.25 0.03 230)" }}
+      {/* ── Final CTA ───────────────────────────────────────────────────── */}
+      <section
+        className="py-28 relative overflow-hidden"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.43 0.115 50), oklch(0.30 0.08 42), oklch(0.52 0.185 26))",
+        }}
       >
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-10 mb-8">
-            <div>
-              <div
-                className="font-serif text-4xl font-bold uppercase tracking-[0.12em] mb-3"
-                style={{ color: "oklch(0.91 0.015 80)" }}
-              >
-                Bubby's
-              </div>
-              <p
-                className="font-serif italic text-sm"
-                style={{ color: "oklch(0.70 0.02 80)" }}
-              >
-                World Famous Pancakes & Classic American Comfort Food
-              </p>
-              <p
-                className="font-sans text-xs mt-3"
-                style={{ color: "oklch(0.60 0.015 80)" }}
-              >
-                New York City · Est. 1990
-              </p>
-            </div>
-            <div>
-              <h4
-                className="font-sans text-xs uppercase tracking-widest font-semibold mb-4"
-                style={{ color: "oklch(0.60 0.04 75)" }}
-              >
-                Contact & Hours
-              </h4>
-              <ul
-                className="space-y-2 font-sans text-sm"
-                style={{ color: "oklch(0.78 0.02 80)" }}
-              >
-                <li className="flex items-center gap-2">
-                  <Phone size={13} />
-                  <a href="tel:2122190666" className="hover:underline">
-                    212-219-0666
+        <div
+          className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10"
+          style={{
+            background: "oklch(0.97 0.01 78)",
+            transform: "translate(30%, -30%)",
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-10"
+          style={{
+            background: "oklch(0.97 0.01 78)",
+            transform: "translate(-30%, 30%)",
+          }}
+        />
+
+        <div className="relative z-10 max-w-3xl mx-auto px-6 text-center text-white">
+          <p className="font-body text-sm font-semibold tracking-[0.2em] uppercase text-yellow-300 mb-4">
+            Come Visit Us
+          </p>
+          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            Ready to Experience
+            <span className="block italic">Bubby&rsquo;s?</span>
+          </h2>
+          <p className="font-body text-white/80 text-lg mb-10 leading-relaxed">
+            Reserve your table today or order online.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              type="button"
+              onClick={scrollToReserve}
+              className="bg-white text-brand-brown font-body font-bold px-10 py-4 rounded-full text-base hover:bg-yellow-50 active:scale-95 transition-all shadow-lg"
+              data-ocid="cta.primary_button"
+            >
+              Reserve Table
+            </button>
+            <button
+              type="button"
+              onClick={scrollToOrder}
+              className="border-2 border-white text-white font-body font-bold px-10 py-4 rounded-full text-base hover:bg-white/10 active:scale-95 transition-all"
+              data-ocid="cta.secondary_button"
+            >
+              Order Online
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Footer ──────────────────────────────────────────────────────── */}
+      <footer
+        style={{
+          background: "oklch(0.18 0.04 38)",
+          color: "oklch(0.94 0.014 80)",
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+          <div>
+            <h3
+              className="font-display text-3xl font-bold mb-3"
+              style={{ color: "oklch(0.94 0.014 80)" }}
+            >
+              Bubby&rsquo;s
+            </h3>
+            <p className="font-body text-sm leading-relaxed opacity-70">
+              Classic American comfort food in the heart of TriBeCa since 1990.
+              Breakfast, brunch, lunch, and dinner made with love.
+            </p>
+          </div>
+
+          <div>
+            <h4 className="font-display font-semibold text-lg mb-5 opacity-90">
+              Visit Us
+            </h4>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3">
+                <MapPin className="w-4 h-4 mt-0.5 opacity-60 shrink-0" />
+                <span className="font-body text-sm opacity-75">
+                  120 Hudson St
+                  <br />
+                  New York, NY 10013
+                  <br />
+                  TriBeCa
+                </span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Phone className="w-4 h-4 opacity-60 shrink-0" />
+                <a
+                  href="tel:2122190666"
+                  className="font-body text-sm opacity-75 hover:opacity-100 transition-opacity"
+                >
+                  212-219-0666
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-display font-semibold text-lg mb-5 opacity-90">
+              Hours
+            </h4>
+            <ul className="space-y-3">
+              <li className="flex items-start gap-3">
+                <Clock className="w-4 h-4 mt-0.5 opacity-60 shrink-0" />
+                <div className="font-body text-sm opacity-75">
+                  <p
+                    className="font-semibold mb-1"
+                    style={{ color: "oklch(0.94 0.014 80)" }}
+                  >
+                    Mon – Fri
+                  </p>
+                  <p>9:00 AM – 10:00 PM</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <Clock className="w-4 h-4 mt-0.5 opacity-60 shrink-0" />
+                <div className="font-body text-sm opacity-75">
+                  <p
+                    className="font-semibold mb-1"
+                    style={{ color: "oklch(0.94 0.014 80)" }}
+                  >
+                    Sat – Sun
+                  </p>
+                  <p>8:00 AM – 11:00 PM</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-display font-semibold text-lg mb-5 opacity-90">
+              Follow Us
+            </h4>
+            <ul className="space-y-4">
+              {[
+                {
+                  icon: Instagram,
+                  label: "Instagram",
+                  href: "https://instagram.com/bubbysrestaurant",
+                },
+                {
+                  icon: Facebook,
+                  label: "Facebook",
+                  href: "https://facebook.com/bubbysnyc",
+                },
+                {
+                  icon: Twitter,
+                  label: "Twitter / X",
+                  href: "https://twitter.com/bubbysnyc",
+                },
+              ].map(({ icon: Icon, label, href }) => (
+                <li key={label}>
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 font-body text-sm opacity-70 hover:opacity-100 transition-opacity"
+                    data-ocid="footer.link"
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
                   </a>
                 </li>
-                <li className="flex items-start gap-2">
-                  <MapPin size={13} className="mt-0.5 shrink-0" />
-                  <span>120 Hudson St, New York, NY</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Clock size={13} className="mt-0.5 shrink-0" />
-                  <span>Brunch 8 AM – 4 PM · Dinner until 9:30 PM</span>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4
-                className="font-sans text-xs uppercase tracking-widest font-semibold mb-4"
-                style={{ color: "oklch(0.60 0.04 75)" }}
-              >
-                Farm Sourcing
-              </h4>
-              <ul
-                className="space-y-2 font-sans text-sm"
-                style={{ color: "oklch(0.78 0.02 80)" }}
-              >
-                <li>🐔 Chicken — Sullivan County Farms</li>
-                <li>🥩 Beef — Autumn Harvest Farm</li>
-              </ul>
-              <p
-                className="font-sans text-xs mt-4"
-                style={{ color: "oklch(0.55 0.015 80)" }}
-              >
-                We source locally and seasonally whenever possible.
-              </p>
-            </div>
-          </div>
-          <div
-            className="pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-sans"
-            style={{
-              borderColor: "oklch(0.91 0.015 80 / 12%)",
-              color: "oklch(0.55 0.015 80)",
-            }}
-          >
-            <p>
-              © {new Date().getFullYear()} Bubby's Restaurant. All rights
-              reserved.
-            </p>
-            <p>
-              Built with ❤️ using{" "}
-              <a
-                href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(typeof window !== "undefined" ? window.location.hostname : "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline"
-                style={{ color: "oklch(0.65 0.04 75)" }}
-              >
-                caffeine.ai
-              </a>
-            </p>
+              ))}
+            </ul>
           </div>
         </div>
+
+        <div
+          className="border-t px-6 py-6 text-center"
+          style={{ borderColor: "oklch(0.30 0.04 38)" }}
+        >
+          <p className="font-body text-xs opacity-50">
+            © {new Date().getFullYear()} Bubby&rsquo;s Restaurant · 120 Hudson
+            St, TriBeCa, New York · Built with love using{" "}
+            <a
+              href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(typeof window !== "undefined" ? window.location.hostname : "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-80 transition-opacity underline"
+            >
+              caffeine.ai
+            </a>
+          </p>
+        </div>
       </footer>
+
+      {/* ── Floating Cart Bar ────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {hasCart && (
+          <CartBar
+            cart={cart}
+            onClear={() => setCart({})}
+            onViewOrder={scrollToOrder}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
